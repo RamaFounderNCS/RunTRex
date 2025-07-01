@@ -3,88 +3,100 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>T-Rex Runner Elite</title>
+  <title>T-Rex Runner - Elite Fullscreen</title>
   <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@500&display=swap" rel="stylesheet">
   <style>
     * {
-      box-sizing: border-box;
       margin: 0;
       padding: 0;
+      box-sizing: border-box;
     }
 
-    body {
+    html, body {
+      width: 100%;
+      height: 100%;
       font-family: 'Rubik', sans-serif;
-      background: linear-gradient(135deg, #e0eafc, #cfdef3);
+      background: linear-gradient(to right, #d7e1ec, #f5f7fa);
+      overflow: hidden;
+    }
+
+    #game-wrapper {
+      width: 100vw;
       height: 100vh;
       display: flex;
       justify-content: center;
       align-items: center;
-      overflow: hidden;
-    }
-
-    #game-container {
-      width: 100%;
-      max-width: 900px;
-      padding: 1.5rem;
+      position: relative;
     }
 
     canvas {
-      background: #fff;
-      border: 2px solid #666;
+      background: #ffffff;
+      border: 2px solid #444;
       border-radius: 16px;
-      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
-      width: 100%;
-      height: auto;
-      display: block;
-      margin: auto;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+      width: 95vw;
+      height: 60vh;
+      max-width: 1000px;
+      max-height: 300px;
     }
 
-    .overlay {
+    #scoreBoard, #gameOverText {
       position: absolute;
-      top: 20px;
-      left: 50%;
-      transform: translateX(-50%);
+      color: #333;
+      text-align: center;
+      padding: 0.8rem 1.6rem;
+      border-radius: 12px;
+      background-color: rgba(255, 255, 255, 0.9);
+      box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+    }
+
+    #scoreBoard {
+      top: 16px;
       font-size: 1.2rem;
       font-weight: bold;
-      color: #222;
-      background-color: rgba(255, 255, 255, 0.85);
-      padding: 0.5rem 1.2rem;
-      border-radius: 12px;
-      box-shadow: 0 4px 20px rgba(0,0,0,0.1);
-      z-index: 10;
+    }
+
+    #gameOverText {
+      top: 45%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 1.5rem;
+      display: none;
     }
 
     @media (max-width: 600px) {
-      canvas {
-        width: 95vw !important;
+      #scoreBoard {
+        font-size: 1rem;
       }
 
-      .overlay {
-        font-size: 1rem;
-        padding: 0.4rem 1rem;
+      #gameOverText {
+        font-size: 1.2rem;
       }
     }
   </style>
 </head>
 <body>
-  <div id="game-container">
-    <div class="overlay" id="scoreBoard">Score: 0</div>
-    <canvas id="game" width="800" height="200"></canvas>
+  <div id="game-wrapper">
+    <canvas id="game" width="1000" height="300"></canvas>
+    <div id="scoreBoard">Score: 0</div>
+    <div id="gameOverText">Game Over! Tap to Restart<br>Final Score: <span id="finalScore">0</span></div>
   </div>
 
   <script>
     const canvas = document.getElementById("game");
     const ctx = canvas.getContext("2d");
     const scoreBoard = document.getElementById("scoreBoard");
+    const gameOverText = document.getElementById("gameOverText");
+    const finalScoreText = document.getElementById("finalScore");
 
     let trex = {
       x: 50,
-      y: 150,
+      y: 260,
       width: 40,
       height: 40,
       dy: 0,
       gravity: 1.3,
-      jumpPower: -14,
+      jumpPower: -15,
       isJumping: false
     };
 
@@ -94,8 +106,8 @@
     let gameOver = false;
 
     function drawGround() {
-      ctx.fillStyle = "#999";
-      ctx.fillRect(0, 190, canvas.width, 10);
+      ctx.fillStyle = "#ccc";
+      ctx.fillRect(0, canvas.height - 10, canvas.width, 10);
     }
 
     function drawTrex() {
@@ -115,7 +127,7 @@
           trex.y < obs.y + obs.height &&
           trex.y + trex.height > obs.y
         ) {
-          gameOver = true;
+          endGame();
         }
       });
 
@@ -129,33 +141,44 @@
       }
     }
 
-    function showGameOver() {
-      ctx.fillStyle = "#000";
-      ctx.font = "bold 26px Rubik, sans-serif";
-      ctx.textAlign = "center";
-      ctx.fillText("Game Over!", canvas.width / 2, 90);
-      ctx.fillText("Final Score: " + score, canvas.width / 2, 130);
+    function endGame() {
+      gameOver = true;
+      gameOverText.style.display = "block";
+      finalScoreText.textContent = score;
+    }
+
+    function resetGame() {
+      trex.y = canvas.height - 40;
+      trex.dy = 0;
+      trex.isJumping = false;
+      obstacles = [];
+      frame = 0;
+      score = 0;
+      gameOver = false;
+      gameOverText.style.display = "none";
+      update();
     }
 
     function update() {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
+
       drawGround();
       drawTrex();
 
       trex.y += trex.dy;
       trex.dy += trex.gravity;
 
-      if (trex.y >= 150) {
-        trex.y = 150;
+      if (trex.y >= canvas.height - trex.height - 10) {
+        trex.y = canvas.height - trex.height - 10;
         trex.dy = 0;
         trex.isJumping = false;
       }
 
-      if (frame % 85 === 0 && !gameOver) {
+      if (frame % 90 === 0 && !gameOver) {
         obstacles.push({
           x: canvas.width,
-          y: 160,
-          width: 20 + Math.random() * 20,
+          y: canvas.height - 50,
+          width: 20 + Math.random() * 30,
           height: 40
         });
       }
@@ -164,21 +187,29 @@
 
       if (!gameOver) {
         score++;
-        frame++;
         scoreBoard.textContent = "Score: " + score;
+        frame++;
         requestAnimationFrame(update);
-      } else {
-        showGameOver();
       }
     }
 
-    document.addEventListener("keydown", e => {
+    document.addEventListener("keydown", (e) => {
       if (e.code === "Space" || e.code === "ArrowUp") jump();
+      if (gameOver && (e.code === "Space" || e.code === "Enter")) resetGame();
     });
 
-    canvas.addEventListener("touchstart", jump);
+    canvas.addEventListener("touchstart", () => {
+      if (gameOver) {
+        resetGame();
+      } else {
+        jump();
+      }
+    });
 
-    update();
+    window.onload = () => {
+      trex.y = canvas.height - trex.height - 10;
+      update();
+    };
   </script>
 </body>
 </html>
