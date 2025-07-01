@@ -3,40 +3,43 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>T-Rex Runner</title>
+  <title>T-Rex Runner Game</title>
   <style>
     * {
+      box-sizing: border-box;
       margin: 0;
       padding: 0;
-      box-sizing: border-box;
     }
 
-    html, body {
-      height: 100%;
-      background: #f9f9f9;
-      font-family: Arial, sans-serif;
-      overflow-x: hidden;
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: linear-gradient(to bottom, #f4f4f4, #eaeaea);
       display: flex;
       justify-content: center;
       align-items: center;
-    }
-
-    canvas {
-      background: #fff;
-      border: 2px solid #333;
-      border-radius: 8px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      height: 100vh;
     }
 
     #game-container {
-      max-width: 100%;
-      overflow: hidden;
+      width: 100%;
+      max-width: 900px;
+      padding: 1rem;
+    }
+
+    canvas {
+      background: #ffffff;
+      width: 100%;
+      height: auto;
+      border: 2px solid #444;
+      border-radius: 12px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+      display: block;
+      margin: auto;
     }
 
     @media (max-width: 600px) {
       canvas {
         width: 95vw !important;
-        height: auto !important;
       }
     }
   </style>
@@ -66,14 +69,14 @@
     let score = 0;
     let gameOver = false;
 
+    function drawGround() {
+      ctx.fillStyle = "#ccc";
+      ctx.fillRect(0, 190, canvas.width, 10);
+    }
+
     function drawTrex() {
       ctx.fillStyle = "#333";
       ctx.fillRect(trex.x, trex.y, trex.width, trex.height);
-    }
-
-    function drawGround() {
-      ctx.fillStyle = "#888";
-      ctx.fillRect(0, 190, canvas.width, 10);
     }
 
     function drawObstacles() {
@@ -82,7 +85,7 @@
         ctx.fillRect(obs.x, obs.y, obs.width, obs.height);
         obs.x -= 6;
 
-        // Collision
+        // Collision detection
         if (
           trex.x < obs.x + obs.width &&
           trex.x + trex.width > obs.x &&
@@ -93,7 +96,7 @@
         }
       });
 
-      // Remove off-screen
+      // Remove off-screen obstacles
       obstacles = obstacles.filter(obs => obs.x + obs.width > 0);
     }
 
@@ -108,7 +111,7 @@
       if (gameOver) {
         ctx.fillStyle = "#000";
         ctx.font = "24px Arial";
-        ctx.fillText("Game Over! Score: " + score, 300, 100);
+        ctx.fillText("Game Over! Score: " + score, 270, 100);
         return;
       }
 
@@ -126,7 +129,6 @@
         trex.isJumping = false;
       }
 
-      // Spawn obstacle
       if (frame % 90 === 0) {
         obstacles.push({
           x: canvas.width,
@@ -138,22 +140,20 @@
 
       drawObstacles();
 
-      // Score
-      score++;
-      ctx.fillStyle = "#555";
+      ctx.fillStyle = "#444";
       ctx.font = "16px Arial";
       ctx.fillText("Score: " + score, 10, 20);
 
+      score++;
       frame++;
       requestAnimationFrame(update);
     }
 
-    // Controls
+    // Controls: keyboard and touch
     document.addEventListener("keydown", (e) => {
       if (e.code === "Space" || e.code === "ArrowUp") jump();
     });
 
-    // Mobile tap
     canvas.addEventListener("touchstart", jump);
 
     update();
