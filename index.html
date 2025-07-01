@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>T-Rex Runner</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    html, body {
+      height: 100%;
+      background: #f9f9f9;
+      font-family: Arial, sans-serif;
+      overflow-x: hidden;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    canvas {
+      background: #fff;
+      border: 2px solid #333;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+
+    #game-container {
+      max-width: 100%;
+      overflow: hidden;
+    }
+
+    @media (max-width: 600px) {
+      canvas {
+        width: 95vw !important;
+        height: auto !important;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div id="game-container">
+    <canvas id="game" width="800" height="200"></canvas>
+  </div>
+
+  <script>
+    const canvas = document.getElementById("game");
+    const ctx = canvas.getContext("2d");
+
+    let trex = {
+      x: 50,
+      y: 150,
+      width: 40,
+      height: 40,
+      dy: 0,
+      gravity: 1.5,
+      jumpPower: -15,
+      isJumping: false
+    };
+
+    let obstacles = [];
+    let frame = 0;
+    let score = 0;
+    let gameOver = false;
+
+    function drawTrex() {
+      ctx.fillStyle = "#333";
+      ctx.fillRect(trex.x, trex.y, trex.width, trex.height);
+    }
+
+    function drawGround() {
+      ctx.fillStyle = "#888";
+      ctx.fillRect(0, 190, canvas.width, 10);
+    }
+
+    function drawObstacles() {
+      ctx.fillStyle = "#e74c3c";
+      obstacles.forEach(obs => {
+        ctx.fillRect(obs.x, obs.y, obs.width, obs.height);
+        obs.x -= 6;
+
+        // Collision
+        if (
+          trex.x < obs.x + obs.width &&
+          trex.x + trex.width > obs.x &&
+          trex.y < obs.y + obs.height &&
+          trex.y + trex.height > obs.y
+        ) {
+          gameOver = true;
+        }
+      });
+
+      // Remove off-screen
+      obstacles = obstacles.filter(obs => obs.x + obs.width > 0);
+    }
+
+    function jump() {
+      if (!trex.isJumping) {
+        trex.dy = trex.jumpPower;
+        trex.isJumping = true;
+      }
+    }
+
+    function update() {
+      if (gameOver) {
+        ctx.fillStyle = "#000";
+        ctx.font = "24px Arial";
+        ctx.fillText("Game Over! Score: " + score, 300, 100);
+        return;
+      }
+
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      drawGround();
+      drawTrex();
+
+      trex.y += trex.dy;
+      trex.dy += trex.gravity;
+
+      if (trex.y >= 150) {
+        trex.y = 150;
+        trex.dy = 0;
+        trex.isJumping = false;
+      }
+
+      // Spawn obstacle
+      if (frame % 90 === 0) {
+        obstacles.push({
+          x: canvas.width,
+          y: 160,
+          width: 20 + Math.random() * 20,
+          height: 40
+        });
+      }
+
+      drawObstacles();
+
+      // Score
+      score++;
+      ctx.fillStyle = "#555";
+      ctx.font = "16px Arial";
+      ctx.fillText("Score: " + score, 10, 20);
+
+      frame++;
+      requestAnimationFrame(update);
+    }
+
+    // Controls
+    document.addEventListener("keydown", (e) => {
+      if (e.code === "Space" || e.code === "ArrowUp") jump();
+    });
+
+    // Mobile tap
+    canvas.addEventListener("touchstart", jump);
+
+    update();
+  </script>
+</body>
+</html>
